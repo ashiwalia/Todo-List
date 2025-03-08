@@ -113,7 +113,7 @@ const TaskModal = ({
   // handle submition of add task
   const handleSubmitTask = (event) => {
     event.preventDefault();
-    const found = storedTasks.find((task) => task.title === title);
+    const found = storedTasks != undefined && storedTasks.find((task) => task.title === title);
 
     if (found === undefined && title !== "") {
       //? insert a new task in state to refresh automatically
