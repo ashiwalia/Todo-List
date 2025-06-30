@@ -159,7 +159,7 @@ const TaskModal = ({
       important: important,
       completed: completed,
     };
-    const newTasks = storedTasks.map((task) => {
+    const newTasks = tasks.map((task) => {
       if (task.title === titleTask) {
         return editedTask;
       } else {
