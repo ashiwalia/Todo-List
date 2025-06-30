@@ -40,11 +40,25 @@ const newTask = [
   },
 ];
 
-// handle case if user delete it from browser
-const storedTasks = JSON.parse(localStorage.getItem("tasks"));
-if (storedTasks === null) {
-  localStorage.setItem("tasks", JSON.stringify(newTask));
-}
+// Initialize localStorage with default tasks if empty
+const initializeLocalStorage = () => {
+  try {
+    const storedTasks = localStorage.getItem("tasks");
+    if (!storedTasks) {
+      localStorage.setItem("tasks", JSON.stringify(newTask));
+      return newTask;
+    }
+    return JSON.parse(storedTasks);
+  } catch (error) {
+    console.error("Error initializing localStorage:", error);
+    // If there's an error, reset localStorage
+    localStorage.setItem("tasks", JSON.stringify(newTask));
+    return newTask;
+  }
+};
+
+// Initialize tasks in localStorage
+const storedTasks = initializeLocalStorage();
 
 /**
 
@@ -68,16 +82,24 @@ const TaskModal = ({
 }) => {
   // get all information of task
   const getTaskInfo = (title) => {
-    const storedTasks = JSON.parse(localStorage.getItem("tasks"));
-    const task = storedTasks.find((task) => task.title === title);
-    if (task !== undefined) {
-      return {
-        title: task.title,
-        description: task.description,
-        date: task.date,
-        important: task.important,
-        completed: task.completed,
-      };
+    try {
+      const storedTasks = localStorage.getItem("tasks");
+      if (!storedTasks) {
+        return null;
+      }
+      const tasks = JSON.parse(storedTasks);
+      const task = tasks.find(task => task.title === title);
+      if (task) {
+        return {
+          title: task.title,
+          description: task.description,
+          date: task.date,
+          important: task.important,
+          completed: task.completed,
+        };
+      }
+    } catch (error) {
+      console.error("Error getting task info:", error);
     }
     return null;
   };
@@ -204,13 +226,21 @@ const TaskModal = ({
   // Use Effects
   useEffect(() => {
     try {
-      const storedTasks = JSON.parse(localStorage.getItem("tasks"));
-      // Only update state if setTasks is available and storedTasks exists
-      if (typeof setTasks === 'function' && storedTasks) {
-        setTasks(storedTasks);
+      // Ensure localStorage is initialized
+      const tasks = initializeLocalStorage();
+      
+      // Only update state if setTasks is available
+      if (typeof setTasks === 'function') {
+        setTasks(tasks);
       }
     } catch (error) {
       console.error("Error loading tasks:", error);
+      // If there's an error, try to reset localStorage
+      const defaultTasks = [...newTask];
+      localStorage.setItem("tasks", JSON.stringify(defaultTasks));
+      if (typeof setTasks === 'function') {
+        setTasks(defaultTasks);
+      }
     }
   }, [setTasks]);
 
