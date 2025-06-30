@@ -70,24 +70,24 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
 
   // Get the filtered tasks based on the current URL
   const getFilteredTasks = () => {
-    let filteredTasks = storedTasks;
+    let filteredTasks = tasks;
 
     switch (navStateTasks) {
       case "today-tasks":
-        filteredTasks = storedTasks.filter(
+        filteredTasks = tasks.filter(
           (task) => formatDate(task.date) === formatDate(new Date())
         );
         break;
       case "important-tasks":
-        filteredTasks = storedTasks.filter((task) => task.important);
+        filteredTasks = tasks.filter((task) => task.important);
         break;
       case "completed-tasks":
-        filteredTasks = storedTasks.filter(
+        filteredTasks = tasks.filter(
           (task) => task.completed === "completed"
         );
         break;
       case "uncompleted-tasks":
-        filteredTasks = storedTasks.filter(
+        filteredTasks = tasks.filter(
           (task) => task.completed === "uncompleted"
         );
         break;
@@ -143,11 +143,11 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
             tasks={tasks}
             handleInputChange={handleInputChange}
             searchTerm={searchTerm}
-            storedTasks={storedTasks}
+            storedTasks={tasks}
           />
           <CurrentItem>
             {checkUrl(navStateTasks)} (
-            {storedTasks && currentTasksInPageView.length} tasks)
+            {tasks && currentTasksInPageView.length} tasks)
           </CurrentItem>
           <div>
             <Form.Label htmlFor="sort">Sort by:</Form.Label>
@@ -233,7 +233,7 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
             setTasks={setTasks}
             checkedSwitch={checkedSwitch}
             numberOfCompletedTasks={numberOfCompletedTasks}
-            allTasksLength={storedTasks.length}
+            allTasksLength={tasks.length}
           />
         </Section>
       </Container>
