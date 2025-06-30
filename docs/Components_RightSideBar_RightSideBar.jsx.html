@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Components/RightSideBar/RightSideBar.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Components/RightSideBar/RightSideBar.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// Imports
+import React, { useState, useEffect } from "react";
+import Offcanvas from "react-bootstrap/Offcanvas";
+import Form from "react-bootstrap/Form";
+import Dropdown from "react-bootstrap/Dropdown";
+import userIcon from "Assets/images/user.jfif";
+import DeleteTaskModal from "Components/DeleteTaskModal/DeleteTaskModal";
+
+// import styles
+import {
+  OffcanvasContainer,
+  Header,
+  ProfileBtn,
+  IcoContainer,
+  Footer,
+  DeleteBtn,
+  FormSwitcher,
+  ButtonContainer,
+  ProgressContainer,
+  ProgressBarContainer,
+} from "./RightSideBar.styled";
+
+/**
+ * Displays the sidebar that includes the task progress, delete all task button, and user profile information.
+ *
+ * @param {Object} props - An object containing the following properties:
+ *   handleToggleTheme {Function} - A function to toggle the theme of the app.
+ *   setTasks {Function} - A function to set the tasks in the app.
+ *   checkedSwitch {Boolean} - A boolean value to indicate whether the dark mode is turned on or off.
+ *   numberOfCompletedTasks {Number} - The number of completed tasks.
+ *   allTasksLength {Number} - The total number of tasks.
+ * @returns {React.Component} - The React component for the right sidebar.
+ */
+const RightSideBar = ({
+  handleToggleTheme,
+  setTasks,
+  checkedSwitch,
+  numberOfCompletedTasks,
+  allTasksLength,
+}) => {
+  // const navigate = useNavigate();
+  const [deleteTask, setDeleteTask] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState(null);
+  // delete all task
+  const handleDeleteAllTasks = () => {
+    setDeleteTask(true);
+  };
+
+  // This function is called to calculate the progress of the completed tasks.
+  const calculateProgress = () => {
+    const decimaledNumber = (
+      (numberOfCompletedTasks / allTasksLength) *
+      100
+    ).toFixed(2);
+    const result = decimaledNumber.includes(".")
+      ? parseFloat(decimaledNumber)
+      : parseInt(decimaledNumber);
+    setCompletedTasks(result);
+  };
+
+  // The progress is calculated whenever the completed tasks state changes.
+  useEffect(() => {
+    calculateProgress();
+  }, [completedTasks]);
+
+  return (
+    &lt;OffcanvasContainer
+      placement={"end"}
+      show={true}
+      backdrop={false}
+      enforceFocus={false}
+      scroll={true}
+    >
+      &lt;Header>
+        &lt;Offcanvas.Title>
+          Hi, User{" "}
+          &lt;IcoContainer>
+            &lt;img src={userIcon} alt="user-ico" />
+          &lt;/IcoContainer>
+        &lt;/Offcanvas.Title>
+        &lt;ButtonContainer onClick={handleToggleTheme}>
+          &lt;span>Darkmode&lt;/span>
+          &lt;FormSwitcher>
+            &lt;Form.Check
+              type="switch"
+              id="custom-switch"
+              checked={JSON.parse(checkedSwitch)}
+            />
+          &lt;/FormSwitcher>
+        &lt;/ButtonContainer>{" "}
+        &lt;ProgressContainer>
+          &lt;span>All tasks&lt;/span>
+          &lt;ProgressBarContainer
+            now={completedTasks}
+            label={`${completedTasks}%`}
+          />
+        &lt;/ProgressContainer>
+      &lt;/Header>
+      &lt;hr />
+      &lt;Offcanvas.Body>
+        &lt;Dropdown.Item href="today-tasks">No tasks today &lt;/Dropdown.Item>
+      &lt;/Offcanvas.Body>
+      &lt;Footer>
+        &lt;DeleteBtn onClick={handleDeleteAllTasks}>Delete all task&lt;/DeleteBtn>
+        &lt;ProfileBtn>
+          &lt;a href="https://github.com/ZiadSheriif">Projected by Ziad Sherif&lt;/a>
+        &lt;/ProfileBtn>{" "}
+        &lt;DeleteTaskModal
+          deleteTask={deleteTask}
+          setDeleteTask={setDeleteTask}
+          singleTask={false}
+          titleTask={"-1"}
+          setTasks={setTasks}
+        />
+      &lt;/Footer>
+    &lt;/OffcanvasContainer>
+  );
+};
+
+export default RightSideBar;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#CardTask">CardTask</a></li><li><a href="global.html#defaultTheme">defaultTheme</a></li><li><a href="global.html#DeleteTaskModal">DeleteTaskModal</a></li><li><a href="global.html#formatDate">formatDate</a></li><li><a href="global.html#Header">Header</a></li><li><a href="global.html#HomePage">HomePage</a></li><li><a href="global.html#LeftSideBar">LeftSideBar</a></li><li><a href="global.html#RightSideBar">RightSideBar</a></li><li><a href="global.html#SearchBar">SearchBar</a></li><li><a href="global.html#ShowTasks">ShowTasks</a></li><li><a href="global.html#TaskModal">TaskModal</a></li><li><a href="global.html#ToastModal">ToastModal</a></li><li><a href="global.html#useLocalStorage">useLocalStorage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Wed Apr 19 2023 01:26:44 GMT+0200 (Eastern European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
