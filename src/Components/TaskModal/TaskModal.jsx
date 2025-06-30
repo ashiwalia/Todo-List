@@ -40,18 +40,33 @@ const newTask = [
   },
 ];
 
+const STORAGE_VERSION = '1.0';  // Increment this when data structure changes
+
 // Initialize localStorage with default tasks if empty
 const initializeLocalStorage = () => {
   try {
+    const version = localStorage.getItem('tasks_version');
     const storedTasks = localStorage.getItem("tasks");
-    if (!storedTasks) {
+
+    // If version doesn't match or no tasks exist, reset to default
+    if (version !== STORAGE_VERSION || !storedTasks) {
+      // Clear all related storage
+      localStorage.removeItem('tasks');
+      localStorage.removeItem('tasks_version');
+      
+      // Set new version and default tasks
+      localStorage.setItem('tasks_version', STORAGE_VERSION);
       localStorage.setItem("tasks", JSON.stringify(newTask));
       return newTask;
     }
+
     return JSON.parse(storedTasks);
   } catch (error) {
     console.error("Error initializing localStorage:", error);
-    // If there's an error, reset localStorage
+    // If there's an error, reset everything
+    localStorage.removeItem('tasks');
+    localStorage.removeItem('tasks_version');
+    localStorage.setItem('tasks_version', STORAGE_VERSION);
     localStorage.setItem("tasks", JSON.stringify(newTask));
     return newTask;
   }
