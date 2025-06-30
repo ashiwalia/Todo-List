@@ -93,8 +93,12 @@ const TaskModal = ({
   const [description, setDescription] = useState(
     taskMode === "Edit" ? getTaskInfo(titleTask)?.description : ""
   );
-  const [important, setImportant] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [important, setImportant] = useState(
+    taskMode === "Edit" ? getTaskInfo(titleTask)?.important : false
+  );
+  const [completed, setCompleted] = useState(
+    taskMode === "Edit" ? getTaskInfo(titleTask)?.completed === "completed" : false
+  );
   const [titleIsUsed, setTitleIsUsed] = useState(false);
   // const [directory, setDirectory] = useState("Main");
 
