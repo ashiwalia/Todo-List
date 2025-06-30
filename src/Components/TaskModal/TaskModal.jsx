@@ -113,62 +113,83 @@ const TaskModal = ({
   // handle submition of add task
   const handleSubmitTask = (event) => {
     event.preventDefault();
-    const found = storedTasks != undefined && storedTasks.find((task) => task.title === title);
+    
+    try {
+      // Always get latest tasks from localStorage
+      const currentStoredTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      
+      const found = currentStoredTasks.find((task) => task.title === title);
 
-    if (found === undefined && title !== "") {
-      //? insert a new task in state to refresh automatically
-      setTitleIsUsed(false);
-      setTasks([
-        ...tasks,
-        {
+      if (found === undefined && title !== "") {
+        setTitleIsUsed(false);
+        
+        const newTaskObj = {
           title: title,
           description: description,
           date: date,
           important: important,
           completed: completed ? "completed" : "uncompleted",
-        },
-      ]);
-
-      //? insert new task
-      localStorage.setItem(
-        "tasks",
-        JSON.stringify([
-          ...tasks,
-          {
-            title: title,
-            description: description,
-            date: date,
-            important: important,
-            completed: completed ? "completed" : "uncompleted",
-          },
-        ])
-      );
-      clearAllData();
-      // close modal window
-      setShowAddNewTask(false);
-    } else setTitleIsUsed(true);
+        };
+        
+        const newTasksArray = [...currentStoredTasks, newTaskObj];
+        
+        // Update localStorage first
+        localStorage.setItem("tasks", JSON.stringify(newTasksArray));
+        
+        // Then update state if setTasks is available
+        if (typeof setTasks === 'function') {
+          setTasks(newTasksArray);
+        }
+        
+        clearAllData();
+        // close modal window
+        setShowAddNewTask(false);
+      } else {
+        setTitleIsUsed(true);
+      }
+    } catch (error) {
+      console.error("Error adding task:", error);
+      alert("There was an error adding the task. Please try again.");
+    }
   };
 
   // Submit editing task
   const handleEditTask = (event) => {
     event.preventDefault();
-    const editedTask = {
-      title: title,
-      description: description,
-      date: date,
-      important: important,
-      completed: completed ? "completed" : "uncompleted",
-    };
-    const newTasks = tasks.map((task) => {
-      if (task.title === titleTask) {
-        return editedTask;
-      } else {
-        return task;
+    
+    try {
+      // Always get the most recent tasks from localStorage
+      const currentTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      
+      const editedTask = {
+        title: title,
+        description: description,
+        date: date,
+        important: important,
+        completed: completed ? "completed" : "uncompleted",
+      };
+      
+      const newTasks = currentTasks.map((task) => {
+        if (task.title === titleTask) {
+          return editedTask;
+        } else {
+          return task;
+        }
+      });
+      
+      // Update local storage first
+      localStorage.setItem("tasks", JSON.stringify(newTasks));
+      
+      // Then update state if setTasks is available
+      if (typeof setTasks === 'function') {
+        setTasks(newTasks);
       }
-    });
-    setTasks(newTasks);
-    localStorage.setItem("tasks", JSON.stringify(newTasks));
-    setShowAddNewTask(false);
+      
+      setShowAddNewTask(false);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      alert("There was an error updating the task. Please try again.");
+    }
   };
 
   // clear all data
@@ -182,8 +203,15 @@ const TaskModal = ({
 
   // Use Effects
   useEffect(() => {
-    const storedTasks = JSON.parse(localStorage.getItem("tasks"));
-    if (storedTasks) setTasks(storedTasks);
+    try {
+      const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+      // Only update state if setTasks is available and storedTasks exists
+      if (typeof setTasks === 'function' && storedTasks) {
+        setTasks(storedTasks);
+      }
+    } catch (error) {
+      console.error("Error loading tasks:", error);
+    }
   }, [setTasks]);
 
   return (

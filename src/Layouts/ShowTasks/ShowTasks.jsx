@@ -23,6 +23,7 @@ const ShowTasks = ({ filteredTasks, setTasks, viewTask }) => {
               setTasks={setTasks}
               taskData={task}
               viewTask={viewTask}
+              tasks={filteredTasks}
             />
           );
         })}
