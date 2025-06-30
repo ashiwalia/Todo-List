@@ -126,7 +126,11 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
   const numberOfCompletedTasks = completedTasks.length;
 
   // Use Effects
-  useEffect(() => {}, [storedTasks, filteredTasks, currentTasksInPageView]);
+  useEffect(() => {
+    if (storedTasks) {
+      setTasks(storedTasks);
+    }
+  }, []);
   return (
     <HomeContainer>
       <Container>
