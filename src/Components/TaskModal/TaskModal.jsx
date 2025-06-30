@@ -93,12 +93,8 @@ const TaskModal = ({
   const [description, setDescription] = useState(
     taskMode === "Edit" ? getTaskInfo(titleTask)?.description : ""
   );
-  const [important, setImportant] = useState(
-    taskMode === "Edit" ? getTaskInfo(titleTask)?.important : false
-  );
-  const [completed, setCompleted] = useState(
-    taskMode === "Edit" ? getTaskInfo(titleTask)?.completed : "uncompleted"
-  );
+  const [important, setImportant] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const [titleIsUsed, setTitleIsUsed] = useState(false);
   // const [directory, setDirectory] = useState("Main");
 
@@ -157,7 +153,7 @@ const TaskModal = ({
       description: description,
       date: date,
       important: important,
-      completed: completed,
+      completed: completed ? "completed" : "uncompleted",
     };
     const newTasks = tasks.map((task) => {
       if (task.title === titleTask) {
