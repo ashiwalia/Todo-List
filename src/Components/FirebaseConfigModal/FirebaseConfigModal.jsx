@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Tab, Tabs, Badge, Spinner } from 'react-bootstrap';
-import { FaFireAlt, FaSync, FaCog, FaExternalLinkAlt, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaFireAlt, FaSync, FaCog, FaExternalLinkAlt, FaCheck, FaTimes, FaPaste } from 'react-icons/fa';
 import FirebaseStorageService from 'Services/FirebaseStorageService';
 
 /**
@@ -18,7 +18,7 @@ const FirebaseConfigModal = ({
   setupInstructions,
   onConfigUpdate
 }) => {
-  const [activeTab, setActiveTab] = useState('config');
+  const [activeTab, setActiveTab] = useState('paste');
   const [isLoading, setIsLoading] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
@@ -29,9 +29,12 @@ const FirebaseConfigModal = ({
     storageBucket: '',
     messagingSenderId: '',
     appId: '',
-    measurementId: '' // Optional for Google Analytics
+    measurementId: '', // Optional for Google Analytics
+    databaseURL: '' // Additional field that might be in Firebase config
   });
   const [errors, setErrors] = useState({});
+  const [configText, setConfigText] = useState('');
+  const [parseError, setParseError] = useState(null);
 
   // Load existing configuration on mount
   useEffect(() => {
@@ -42,6 +45,8 @@ const FirebaseConfigModal = ({
       }
       setTestResult(null);
       setErrors({});
+      setConfigText('');
+      setParseError(null);
     }
   }, [show]);
 
@@ -57,6 +62,74 @@ const FirebaseConfigModal = ({
         ...prev,
         [field]: null
       }));
+    }
+  };
+
+  const parseFirebaseConfig = () => {
+    setParseError(null);
+    
+    if (!configText.trim()) {
+      setParseError('Please paste your Firebase configuration code');
+      return;
+    }
+
+    try {
+      // Extract the firebaseConfig object from the pasted text
+      const configMatch = configText.match(/const\s+firebaseConfig\s*=\s*\{([^}]+)\}/s);
+      
+      if (!configMatch) {
+        // Try alternative patterns
+        const altMatch = configText.match(/firebaseConfig\s*=\s*\{([^}]+)\}/s) ||
+                        configText.match(/\{([^}]*apiKey[^}]*)\}/s);
+        
+        if (!altMatch) {
+          setParseError('Could not find firebaseConfig object in the pasted text');
+          return;
+        }
+      }
+
+      const configString = configMatch ? configMatch[1] : configText.match(/\{([^}]*apiKey[^}]*)\}/s)[1];
+      
+      // Parse each field from the config string
+      const parseField = (fieldName) => {
+        const regex = new RegExp(`${fieldName}\\s*:\\s*["']([^"']+)["']`, 'i');
+        const match = configString.match(regex);
+        return match ? match[1] : '';
+      };
+
+      const parsedConfig = {
+        apiKey: parseField('apiKey'),
+        authDomain: parseField('authDomain'),
+        projectId: parseField('projectId'),
+        storageBucket: parseField('storageBucket'),
+        messagingSenderId: parseField('messagingSenderId'),
+        appId: parseField('appId'),
+        measurementId: parseField('measurementId'),
+        databaseURL: parseField('databaseURL')
+      };
+
+      // Validate that we got the required fields
+      const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+      const missingFields = requiredFields.filter(field => !parsedConfig[field]);
+      
+      if (missingFields.length > 0) {
+        setParseError(`Missing required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+
+      // Update the config state
+      setConfig(parsedConfig);
+      setErrors({});
+      setConfigText(''); // Clear the textarea after successful parse
+      
+      // Show success message
+      setTestResult({ 
+        success: true, 
+        message: 'Configuration parsed successfully! Please test the connection to verify.' 
+      });
+
+    } catch (error) {
+      setParseError(`Error parsing configuration: ${error.message}`);
     }
   };
 
@@ -158,10 +231,13 @@ const FirebaseConfigModal = ({
       storageBucket: '',
       messagingSenderId: '',
       appId: '',
-      measurementId: ''
+      measurementId: '',
+      databaseURL: ''
     });
     setTestResult(null);
     setErrors({});
+    setConfigText('');
+    setParseError(null);
     
     if (onConfigUpdate) {
       onConfigUpdate();
@@ -236,7 +312,84 @@ const FirebaseConfigModal = ({
         </div>
 
         <Tabs activeKey={activeTab} onSelect={setActiveTab} className="mb-3">
-          <Tab eventKey="config" title="Configuration">
+          <Tab eventKey="paste" title="Paste Config">
+            <div className="mt-3">
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  <FaPaste className="me-2" />
+                  Paste Firebase Configuration Code
+                </Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={12}
+                  placeholder={`Paste your Firebase config code here, for example:
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDa2ojHTs5VZNX9vrHS0YUJhsY877dORGI",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.firebasestorage.app",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef123456789"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);`}
+                  value={configText}
+                  onChange={(e) => setConfigText(e.target.value)}
+                  style={{ fontFamily: 'monospace', fontSize: '0.9em' }}
+                />
+                <Form.Text className="text-muted">
+                  Paste the entire Firebase configuration code from your Firebase console. 
+                  The parser will automatically extract the configuration values.
+                </Form.Text>
+              </Form.Group>
+
+              {/* Parse Error */}
+              {parseError && (
+                <Alert variant="danger" className="mb-3">
+                  <FaTimes className="me-2" />
+                  {parseError}
+                </Alert>
+              )}
+
+              {/* Parse Button */}
+              <div className="d-flex gap-2 mb-3">
+                <Button 
+                  variant="primary" 
+                  onClick={parseFirebaseConfig}
+                  disabled={!configText.trim()}
+                >
+                  <FaPaste className="me-2" />
+                  Parse Configuration
+                </Button>
+                
+                <Button 
+                  variant="outline-secondary" 
+                  onClick={() => {
+                    setConfigText('');
+                    setParseError(null);
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+
+              <Alert variant="info">
+                <small>
+                  <strong>How it works:</strong> Simply copy the entire Firebase configuration code 
+                  from your Firebase console and paste it above. The parser will automatically 
+                  extract all the necessary configuration values and populate the form fields.
+                </small>
+              </Alert>
+            </div>
+          </Tab>
+
+          <Tab eventKey="config" title="Manual Config">
             <div className="mt-3">
               {/* Firebase Configuration Form */}
               <Form>
@@ -334,6 +487,19 @@ const FirebaseConfigModal = ({
                   />
                   <Form.Text className="text-muted">
                     Only needed if you're using Google Analytics
+                  </Form.Text>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Database URL (Optional)</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="https://your-project.firebaseio.com"
+                    value={config.databaseURL}
+                    onChange={(e) => handleInputChange('databaseURL', e.target.value)}
+                  />
+                  <Form.Text className="text-muted">
+                    Only needed if you're using Realtime Database
                   </Form.Text>
                 </Form.Group>
 
