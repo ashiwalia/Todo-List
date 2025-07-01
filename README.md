@@ -1,5 +1,6 @@
 <div align="center">
-<img  src="screenshots/6.png">
+<img- [🔥 Firebase Firestore Setup ](#-firebase-firestore-setup-)
+- [📋 Firebase Setup Guide](FIREBASE_SETUP.md) src="screenshots/6.png">
 </div>
 
 <div align="center">
@@ -23,7 +24,8 @@
   - [Prerequisite ](#prerequisite-)
   - [Installation ](#installation-)
   - [Running ](#running-)
-- [💻 Built Using ](#-built-using-)
+- [� Firebase Firestore Setup ](#-firebase-firestore-setup-)
+- [�💻 Built Using ](#-built-using-)
 - [📸 Demo Screens ](#-demo-screens-)
 - [🕴 Contributors ](#-contributors-)
 - [⏳ Backlog](#-backlog)
@@ -47,7 +49,58 @@ A to do List application that allows users to create and manage their tasks. It 
 5. Ability to search for tasks using a search bar.
 6. Responsive design that works well on desktop and mobile devices.
 7. Integration with local storage to persist data between sessions.
+8. **🆕 Firebase Cloud Storage Integration** - Sync your tasks to Firebase Firestore for real-time storage across devices and browsers.
 
+## 🔥 Firebase Firestore Setup <a name="firebase-setup"></a>
+
+The Todo List now supports cloud storage through Firebase Firestore integration. This allows your tasks to persist across devices with real-time synchronization and offline support.
+
+### Quick Setup Guide (Firebase Firestore)
+
+1. **Create a Firebase Project:**
+   - Go to [Firebase Console](https://console.firebase.google.com)
+   - Create a new project or select an existing one
+   - No credit card required for the free tier
+
+2. **Enable Firestore Database:**
+   - Go to 'Firestore Database' in the sidebar
+   - Click 'Create database'
+   - Choose 'Start in test mode' for now (you can secure it later)
+   - Select a location close to your users
+
+3. **Get Your Firebase Config:**
+   - Go to Project Settings (gear icon)
+   - Scroll down to 'Your apps' section
+   - Click 'Add app' and select Web (</>) if no web app exists
+   - Register your app with a nickname
+   - Copy the firebaseConfig object
+
+4. **Configure Through UI:**
+   - Click the Firebase badge in the app header
+   - Enter your Firebase credentials in the configuration form
+   - Click 'Test Connection' to verify
+   - Click 'Save Configuration' to store locally
+
+5. **Verification:**
+   - The app will automatically sync tasks with Firebase
+   - Check the Firebase status badge in the header
+   - Your tasks will now sync across all devices in real-time
+
+### Benefits of Firebase Firestore
+- ✅ Real-time synchronization across devices
+- ✅ Offline support with automatic sync when online
+- ✅ Free tier with generous limits (1GB storage, 50K reads/day)
+- ✅ No external API keys needed for basic functionality
+- ✅ Advanced security rules for production use
+- ✅ Scalable infrastructure by Google
+- ✅ Built-in authentication support
+- ✅ UI-configurable (no environment variables needed)
+
+### Notes
+- Firebase credentials are stored locally in your browser
+- Works perfectly offline - changes sync when connection is restored
+- The app works completely without Firebase (offline mode)
+- Since this is hosted on GitHub Pages, Firebase credentials are configured through the UI instead of environment variables
 
 > [!NOTE]
 > I am still working on the project, this is not the final verison of it, I just make it public to get feedback and imporve it

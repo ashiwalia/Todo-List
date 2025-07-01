@@ -73,19 +73,20 @@ const initializeLocalStorage = () => {
 };
 
 // Initialize tasks in localStorage
-const storedTasks = initializeLocalStorage();
+initializeLocalStorage();
 
 /**
-
-* Component that displays task modal which have title ,description ,date and status of task
-* @param {boolean} showAddNewTask - A value that contains on or off modal task
-* @param {function} setShowAddNewTask - A function that sets value of on or off of task modal
-* @param {string} taskMode - A string that indicates whether it is Add or Edit mode
-* @param {string} titleTask - A string that contains the title of the task being edited
-* @param {function} setTasks - A function that sets the state of the tasks
-* @param {array} tasks - An array that contains the list of tasks
-* @returns {React.Component}
-*/
+ * Component that displays task modal which have title ,description ,date and status of task
+ * @param {boolean} showAddNewTask - A value that contains on or off modal task
+ * @param {function} setShowAddNewTask - A function that sets value of on or off of task modal
+ * @param {string} taskMode - A string that indicates whether it is Add or Edit mode
+ * @param {string} titleTask - A string that contains the title of the task being edited
+ * @param {function} setTasks - A function that sets the state of the tasks
+ * @param {array} tasks - An array that contains the list of tasks
+ * @param {function} addTask - A function to add a new task (enhanced storage)
+ * @param {function} updateTask - A function to update an existing task (enhanced storage)
+ * @returns {React.Component}
+ */
 
 const TaskModal = ({
   showAddNewTask,
@@ -94,6 +95,8 @@ const TaskModal = ({
   titleTask,
   setTasks,
   tasks,
+  addTask,
+  updateTask
 }) => {
   // get all information of task
   const getTaskInfo = (title) => {
@@ -148,38 +151,45 @@ const TaskModal = ({
   // const handleDirectory = (event) => setDirectory(event.target.value);
 
   // handle submition of add task
-  const handleSubmitTask = (event) => {
+  const handleSubmitTask = async (event) => {
     event.preventDefault();
     
     try {
-      // Always get latest tasks from localStorage
-      const currentStoredTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-      
-      const found = currentStoredTasks.find((task) => task.title === title);
+      if (title.trim() === "") {
+        setTitleIsUsed(true);
+        return;
+      }
 
-      if (found === undefined && title !== "") {
+      // Check if task with same title already exists
+      const found = tasks.find((task) => task.title === title);
+
+      if (found === undefined) {
         setTitleIsUsed(false);
         
         const newTaskObj = {
+          id: generateTaskId(),
           title: title,
           description: description,
           date: date,
           important: important,
           completed: completed ? "completed" : "uncompleted",
+          createdAt: new Date().toISOString()
         };
         
-        const newTasksArray = [...currentStoredTasks, newTaskObj];
-        
-        // Update localStorage first
-        localStorage.setItem("tasks", JSON.stringify(newTasksArray));
-        
-        // Then update state if setTasks is available
-        if (typeof setTasks === 'function') {
-          setTasks(newTasksArray);
+        // Use enhanced storage if available, otherwise fallback to localStorage
+        if (typeof addTask === 'function') {
+          await addTask(newTaskObj);
+        } else {
+          // Fallback to localStorage method
+          const currentStoredTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+          const newTasksArray = [...currentStoredTasks, newTaskObj];
+          localStorage.setItem("tasks", JSON.stringify(newTasksArray));
+          if (typeof setTasks === 'function') {
+            setTasks(newTasksArray);
+          }
         }
         
         clearAllData();
-        // close modal window
         setShowAddNewTask(false);
       } else {
         setTitleIsUsed(true);
@@ -190,14 +200,16 @@ const TaskModal = ({
     }
   };
 
+  // Generate unique task ID
+  const generateTaskId = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  };
+
   // Submit editing task
-  const handleEditTask = (event) => {
+  const handleEditTask = async (event) => {
     event.preventDefault();
     
     try {
-      // Always get the most recent tasks from localStorage
-      const currentTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-      
       const editedTask = {
         title: title,
         description: description,
@@ -206,20 +218,24 @@ const TaskModal = ({
         completed: completed ? "completed" : "uncompleted",
       };
       
-      const newTasks = currentTasks.map((task) => {
-        if (task.title === titleTask) {
-          return editedTask;
-        } else {
-          return task;
+      // Use enhanced storage if available, otherwise fallback to localStorage
+      if (typeof updateTask === 'function') {
+        await updateTask(titleTask, editedTask);
+      } else {
+        // Fallback to localStorage method
+        const currentTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        const newTasks = currentTasks.map((task) => {
+          if (task.title === titleTask) {
+            return { ...task, ...editedTask };
+          } else {
+            return task;
+          }
+        });
+        
+        localStorage.setItem("tasks", JSON.stringify(newTasks));
+        if (typeof setTasks === 'function') {
+          setTasks(newTasks);
         }
-      });
-      
-      // Update local storage first
-      localStorage.setItem("tasks", JSON.stringify(newTasks));
-      
-      // Then update state if setTasks is available
-      if (typeof setTasks === 'function') {
-        setTasks(newTasks);
       }
       
       setShowAddNewTask(false);

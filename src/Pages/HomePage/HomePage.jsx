@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { FiList } from "react-icons/fi";
@@ -21,7 +21,42 @@ import LeftSideBar from "Components/LeftSideBar/LeftSideBar";
 import RightSideBar from "Components/RightSideBar/RightSideBar";
 import Header from "Layouts/Header/Header";
 import ShowTasks from "Layouts/ShowTasks/ShowTasks";
+import FirebaseConfigModal from "Components/FirebaseConfigModal/FirebaseConfigModal";
 import formatDate from "Utils/formatDate";
+
+// Import enhanced hooks
+import useTaskStorage from "Hooks/useTaskStorage";
+
+// Default tasks
+const defaultTasks = [
+  {
+    id: "1",
+    title: "Task 1",
+    description: "This is a new task",
+    date: "2023-03-01",
+    important: true,
+    completed: "uncompleted",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "2",
+    title: "Task 2",
+    description: "This is a new task",
+    date: "2023-03-03",
+    important: false,
+    completed: "uncompleted",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "3",
+    title: "Task 3",
+    description: "This is a new task",
+    date: "2023-04-24",
+    important: true,
+    completed: "completed",
+    createdAt: new Date().toISOString()
+  },
+];
 
 /**
  * Home page that displays main content of website
@@ -30,12 +65,28 @@ import formatDate from "Utils/formatDate";
  * @returns {React.Page}
  */
 const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
-  // Use States
-  const [tasks, setTasks] = useState([]);
+  // Enhanced task storage hook
+  const {
+    tasks,
+    isLoading,
+    isSyncing,
+    syncStatus,
+    cloudEnabled,
+    saveTasks,
+    addTask,
+    updateTask,
+    deleteTask,
+    deleteAllTasks,
+    syncWithCloud,
+    getCloudSetupInstructions
+  } = useTaskStorage('tasks', defaultTasks);
+
+  // UI States
   const [viewTask, setViewTask] = useState(true);
-  const storedTasks = JSON.parse(localStorage.getItem("tasks"));
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortCriteria, setSortCriteria] = useState("dueDate"); // New state for sorting criteria
+  const [sortCriteria, setSortCriteria] = useState("dueDate");
+  const [showFirebaseConfig, setShowFirebaseConfig] = useState(false);
+  
   const location = useLocation();
   const url = location.pathname;
   const navStateTasks = url.split("/")[1];
@@ -47,13 +98,26 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
   const handleViewList = () => {
     setViewTask(false);
   };
+  
   const handleViewGrid = () => {
     setViewTask(true);
   };
 
   const handleSortChange = (event) => {
-    console.log(event.target.value)
     setSortCriteria(event.target.value);
+  };
+
+  const handleFirebaseConfig = () => {
+    setShowFirebaseConfig(true);
+  };
+
+  const handleFirebaseSync = async () => {
+    return await syncWithCloud();
+  };
+
+  const handleConfigUpdate = () => {
+    // Refresh the tasks storage when Firebase config is updated
+    window.location.reload(); // Simple refresh to reinitialize Firebase
   };
 
   // Sorting function
@@ -125,25 +189,44 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
   const completedTasks = tasks.filter((task) => task.completed === "completed");
   const numberOfCompletedTasks = completedTasks.length;
 
-  // Use Effects
-  useEffect(() => {
-    if (storedTasks) {
-      setTasks(storedTasks);
-    }
-  }, []);
+  // Loading state
+  if (isLoading) {
+    return (
+      <HomeContainer>
+        <Container>
+          <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+            <div className="text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-2">Loading your tasks...</p>
+            </div>
+          </div>
+        </Container>
+      </HomeContainer>
+    );
+  }
   return (
     <HomeContainer>
       <Container>
         <Section>
-          <LeftSideBar setTasks={setTasks} tasks={tasks} />
+          <LeftSideBar 
+            setTasks={saveTasks} 
+            tasks={tasks}
+            addTask={addTask}
+          />
         </Section>
         <CenterContainer>
           <Header
-            setTasks={setTasks}
+            setTasks={saveTasks}
             tasks={tasks}
             handleInputChange={handleInputChange}
             searchTerm={searchTerm}
             storedTasks={tasks}
+            syncStatus={syncStatus}
+            cloudEnabled={cloudEnabled}
+            isSyncing={isSyncing}
+            onCloudSetup={handleFirebaseConfig}
           />
           <CurrentItem>
             {checkUrl(navStateTasks)} (
@@ -171,7 +254,9 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
                 <ShowTasks
                   filteredTasks={filteredTasks}
                   viewTask={viewTask}
-                  setTasks={setTasks}
+                  setTasks={saveTasks}
+                  updateTask={updateTask}
+                  deleteTask={deleteTask}
                 />
               }
             />
@@ -181,7 +266,9 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
                 <ShowTasks
                   filteredTasks={filteredTasks}
                   viewTask={viewTask}
-                  setTasks={setTasks}
+                  setTasks={saveTasks}
+                  updateTask={updateTask}
+                  deleteTask={deleteTask}
                 />
               }
             />
@@ -191,7 +278,9 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
                 <ShowTasks
                   filteredTasks={filteredTasks}
                   viewTask={viewTask}
-                  setTasks={setTasks}
+                  setTasks={saveTasks}
+                  updateTask={updateTask}
+                  deleteTask={deleteTask}
                 />
               }
             />
@@ -201,7 +290,9 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
                 <ShowTasks
                   filteredTasks={filteredTasks}
                   viewTask={viewTask}
-                  setTasks={setTasks}
+                  setTasks={saveTasks}
+                  updateTask={updateTask}
+                  deleteTask={deleteTask}
                 />
               }
             />
@@ -211,7 +302,9 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
                 <ShowTasks
                   filteredTasks={filteredTasks}
                   viewTask={viewTask}
-                  setTasks={setTasks}
+                  setTasks={saveTasks}
+                  updateTask={updateTask}
+                  deleteTask={deleteTask}
                 />
               }
             />
@@ -221,7 +314,9 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
                 <ShowTasks
                   filteredTasks={filteredTasks}
                   viewTask={viewTask}
-                  setTasks={setTasks}
+                  setTasks={saveTasks}
+                  updateTask={updateTask}
+                  deleteTask={deleteTask}
                 />
               }
             />
@@ -230,13 +325,25 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
         <Section>
           <RightSideBar
             handleToggleTheme={handleToggleTheme}
-            setTasks={setTasks}
+            setTasks={saveTasks}
             checkedSwitch={checkedSwitch}
             numberOfCompletedTasks={numberOfCompletedTasks}
             allTasksLength={tasks.length}
+            deleteAllTasks={deleteAllTasks}
           />
         </Section>
       </Container>
+      
+      {/* Firebase Configuration Modal */}
+      <FirebaseConfigModal
+        show={showFirebaseConfig}
+        onHide={() => setShowFirebaseConfig(false)}
+        syncStatus={syncStatus}
+        cloudEnabled={cloudEnabled}
+        onSync={handleFirebaseSync}
+        setupInstructions={getCloudSetupInstructions()}
+        onConfigUpdate={handleConfigUpdate}
+      />
     </HomeContainer>
   );
 };

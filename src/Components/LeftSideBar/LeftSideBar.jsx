@@ -18,9 +18,10 @@ import {
  * @param {Object} props - An object containing the following properties:
  *   setTasks {Function} - A function to set the tasks in the app.
  *   tasks {Array} - An array of task objects to display in the app.
+ *   addTask {Function} - Enhanced function to add a new task.
  * @returns {React.Component} - The React component for the left sidebar.
  */
-const LeftSideBar = ({ setTasks, tasks }) => {
+const LeftSideBar = ({ setTasks, tasks, addTask }) => {
   const [showAddNewTask, setShowAddNewTask] = useState(false);
   const location = useLocation();
   const url = location.pathname;
@@ -70,6 +71,7 @@ const LeftSideBar = ({ setTasks, tasks }) => {
         taskMode={"Add"}
         setTasks={setTasks}
         tasks={tasks}
+        addTask={addTask}
       />
     </>
   );

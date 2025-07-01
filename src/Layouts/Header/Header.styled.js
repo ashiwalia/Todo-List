@@ -81,3 +81,39 @@ export const NotificationBadge = styled.div`
   top: 2px;
   right: 2px;
 `;
+
+export const SyncStatusContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  @media (max-width: 768px) {
+    margin-right: 5px;
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.3rem 0.5rem;
+    }
+  }
+`;
+
+export const SyncIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+
+  .spinner-border {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+
+  svg {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+`;

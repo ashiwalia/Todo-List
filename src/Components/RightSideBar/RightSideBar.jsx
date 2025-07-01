@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Form from "react-bootstrap/Form";
 import Dropdown from "react-bootstrap/Dropdown";
-// import userIcon from "Assets/images/user.jfif";
 import DeleteTaskModal from "Components/DeleteTaskModal/DeleteTaskModal";
 
 // import styles
@@ -11,7 +10,6 @@ import {
   OffcanvasContainer,
   Header,
   ProfileBtn,
-  // IcoContainer,
   Footer,
   DeleteBtn,
   FormSwitcher,
@@ -29,6 +27,7 @@ import {
  *   checkedSwitch {Boolean} - A boolean value to indicate whether the dark mode is turned on or off.
  *   numberOfCompletedTasks {Number} - The number of completed tasks.
  *   allTasksLength {Number} - The total number of tasks.
+ *   deleteAllTasks {Function} - Enhanced function to delete all tasks.
  * @returns {React.Component} - The React component for the right sidebar.
  */
 const RightSideBar = ({
@@ -37,6 +36,7 @@ const RightSideBar = ({
   checkedSwitch,
   numberOfCompletedTasks,
   allTasksLength,
+  deleteAllTasks
 }) => {
   // const navigate = useNavigate();
   const [deleteTask, setDeleteTask] = useState(false);
@@ -121,6 +121,7 @@ const RightSideBar = ({
           singleTask={false}
           titleTask={"-1"}
           setTasks={setTasks}
+          deleteTaskFunction={deleteAllTasks}
         />
       </Footer>
     </OffcanvasContainer>

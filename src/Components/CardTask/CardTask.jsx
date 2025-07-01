@@ -23,34 +23,70 @@ import formatDate from "Utils/formatDate";
 /**
  * Component that displays card task that contains the information of task
  *
+ * @param {Object} taskData - The task data object
+ * @param {Function} setTasks - Function to set tasks
+ * @param {Array} tasks - Array of tasks
+ * @param {boolean} viewTask - View mode
+ * @param {Function} updateTask - Enhanced function to update a task
+ * @param {Function} deleteTask - Enhanced function to delete a task
  * @returns {React.Component}
  */
-const CardTask = ({ taskData, setTasks, tasks, viewTask }) => {
+const CardTask = ({ taskData, setTasks, tasks, viewTask, updateTask, deleteTask }) => {
   //  state that handle task is completed or  not
   const [state, setState] = useState(taskData.completed);
   //  state that handle task is important or not
   const [starTask, setStarTask] = useState(taskData.important);
-  const [deleteTask, setDeleteTask] = useState(false);
+  const [deleteTaskModal, setDeleteTaskModal] = useState(false);
   const [showAddNewTask, setShowAddNewTask] = useState(false);
-  const storedTasks = JSON.parse(localStorage.getItem("tasks"));
-  const taskToEdit = storedTasks.find((task) => task.title === taskData.title);
 
   // handle state change of task progress
-  const handleToggleState = () => {
-    if (taskToEdit.completed === "completed") {
-      taskToEdit.completed = "uncompleted";
-    } else taskToEdit.completed = "completed";
-    localStorage.setItem("tasks", JSON.stringify(storedTasks));
-    setState(taskToEdit.completed);
+  const handleToggleState = async () => {
+    const newState = state === "completed" ? "uncompleted" : "completed";
+    
+    // Use enhanced storage if available, otherwise fallback to localStorage
+    if (typeof updateTask === 'function') {
+      await updateTask(taskData.id || taskData.title, { completed: newState });
+    } else {
+      // Fallback to localStorage method
+      const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+      const taskToEdit = storedTasks.find((task) => 
+        task.id === taskData.id || task.title === taskData.title
+      );
+      if (taskToEdit) {
+        taskToEdit.completed = newState;
+        localStorage.setItem("tasks", JSON.stringify(storedTasks));
+        if (typeof setTasks === 'function') {
+          setTasks(storedTasks);
+        }
+      }
+    }
+    
+    setState(newState);
   };
 
   // handle is favorite task or not
-  const handleFavoriteTasks = () => {
-    if (taskToEdit.important) {
-      taskToEdit.important = false;
-    } else taskToEdit.important = true;
-    localStorage.setItem("tasks", JSON.stringify(storedTasks));
-    setStarTask(taskToEdit.important);
+  const handleFavoriteTasks = async () => {
+    const newImportant = !starTask;
+    
+    // Use enhanced storage if available, otherwise fallback to localStorage
+    if (typeof updateTask === 'function') {
+      await updateTask(taskData.id || taskData.title, { important: newImportant });
+    } else {
+      // Fallback to localStorage method
+      const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+      const taskToEdit = storedTasks.find((task) => 
+        task.id === taskData.id || task.title === taskData.title
+      );
+      if (taskToEdit) {
+        taskToEdit.important = newImportant;
+        localStorage.setItem("tasks", JSON.stringify(storedTasks));
+        if (typeof setTasks === 'function') {
+          setTasks(storedTasks);
+        }
+      }
+    }
+    
+    setStarTask(newImportant);
   };
 
   useEffect(() => {
@@ -93,7 +129,7 @@ const CardTask = ({ taskData, setTasks, tasks, viewTask }) => {
             {starTask && <AiFillStar onClick={handleFavoriteTasks} size={25} />}
           </IconContainer>
           <IconContainer>
-            <RiDeleteBinLine onClick={() => setDeleteTask(true)} size={25} />
+            <RiDeleteBinLine onClick={() => setDeleteTaskModal(true)} size={25} />
           </IconContainer>
           <IconContainer>
             <BiDotsVerticalRounded
@@ -104,11 +140,13 @@ const CardTask = ({ taskData, setTasks, tasks, viewTask }) => {
         </Settings>
       </Footer>
       <DeleteTaskModal
-        deleteTask={deleteTask}
-        setDeleteTask={setDeleteTask}
+        deleteTask={deleteTaskModal}
+        setDeleteTask={setDeleteTaskModal}
         singleTask={true}
         titleTask={taskData.title}
+        taskId={taskData.id}
         setTasks={setTasks}
+        deleteTaskFunction={deleteTask}
       />
       <TaskModal
         showAddNewTask={showAddNewTask}
@@ -117,6 +155,7 @@ const CardTask = ({ taskData, setTasks, tasks, viewTask }) => {
         titleTask={taskData.title}
         tasks={tasks}
         setTasks={setTasks}
+        updateTask={updateTask}
       />
     </CardContainer>
   );

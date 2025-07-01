@@ -12,7 +12,9 @@ import { ConfirmBtn } from "./DeleteTaskModal.styled";
  * @param {function} setDeleteTask - Function to set value of deleteTask
  * @param {boolean} singleTask - Value that represents if only a single task is to be deleted or not
  * @param {string} titleTask - Title of the task to be deleted
+ * @param {string} taskId - ID of the task to be deleted
  * @param {function} setTasks - Function to update the task list after task deletion
+ * @param {function} deleteTaskFunction - Enhanced function to delete a task
  * @returns {React.Component} - Returns the delete task confirmation modal
  */
 const DeleteTaskModal = ({
@@ -20,7 +22,9 @@ const DeleteTaskModal = ({
   setDeleteTask,
   singleTask,
   titleTask,
+  taskId,
   setTasks,
+  deleteTaskFunction
 }) => {
   /**
    * Function to close the delete task confirmation modal
@@ -32,25 +36,48 @@ const DeleteTaskModal = ({
   /**
    * Function to delete the selected task(s) from the task list
    */
-  const handleTaskDelete = () => {
-    const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+  const handleTaskDelete = async () => {
+    try {
+      // delete a certain task
+      if (singleTask) {
+        // Use enhanced storage if available, otherwise fallback to localStorage
+        if (typeof deleteTaskFunction === 'function') {
+          await deleteTaskFunction(taskId || titleTask);
+        } else {
+          // Fallback to localStorage method
+          const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+          const taskIndex = storedTasks.findIndex(
+            (task) => (task.id === taskId) || (task.title === titleTask)
+          );
 
-    // delete a certain task
-    if (singleTask) {
-      const taskIndex = storedTasks.findIndex(
-        (task) => task.title === titleTask
-      );
+          if (taskIndex !== -1) {
+            storedTasks.splice(taskIndex, 1);
+            localStorage.setItem("tasks", JSON.stringify(storedTasks));
+            if (typeof setTasks === 'function') {
+              setTasks(storedTasks);
+            }
+          }
+        }
+      }
+      // delete all tasks
+      else {
+        if (typeof deleteTaskFunction === 'function') {
+          // This would be deleteAllTasks function
+          await deleteTaskFunction();
+        } else {
+          // Fallback to localStorage method
+          localStorage.setItem("tasks", JSON.stringify([]));
+          if (typeof setTasks === 'function') {
+            setTasks([]);
+          }
+        }
+      }
 
-      storedTasks.splice(taskIndex, 1);
-      localStorage.setItem("tasks", JSON.stringify(storedTasks));
+      closeDeleteTaskModal();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      alert("There was an error deleting the task. Please try again.");
     }
-    // delete all tasks
-    else {
-      localStorage.setItem("tasks", JSON.stringify([]));
-    }
-
-    setTasks(storedTasks);
-    closeDeleteTaskModal();
   };
 
   return (

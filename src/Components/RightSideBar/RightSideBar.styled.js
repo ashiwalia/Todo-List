@@ -67,11 +67,6 @@ export const ProfileBtn = styled(Button)`
   }
 `;
 
-export const IcoContainer = styled.span`
-  img {
-    border-radius: 9999px;
-  }
-`;
 export const DeleteBtn = styled.span`
   color: ${({ theme }) => theme.color.primary};
   cursor: pointer;
