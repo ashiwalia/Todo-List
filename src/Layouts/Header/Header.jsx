@@ -21,7 +21,8 @@ import TaskModal from "Components/TaskModal/TaskModal";
 import ToastModal from "Components/ToastModal/ToastModal";
 import formatDate from "Utils/formatDate";
 import { MdNotifications } from "react-icons/md";
-import { FaCloud, FaCloudDownloadAlt, FaCog } from "react-icons/fa";
+import { FaCloud, FaCloudDownloadAlt, FaCog, FaHistory } from "react-icons/fa";
+import { Button } from "react-bootstrap";
 
 // Get the current date
 let currentDate = new Date().toLocaleDateString();
@@ -48,7 +49,9 @@ const Header = ({
   syncStatus = 'offline',
   cloudEnabled = false,
   isSyncing = false,
-  onCloudSetup
+  onCloudSetup,
+  onRecoverFromBackup,
+  backupInfo = []
 }) => {
   const ctx = useContext(AuthContext);
   const getTodayAndUnCompletedTasks = () => {
@@ -65,10 +68,30 @@ const Header = ({
   const [showAddNewTask, setShowAddNewTask] = useState(false);
 
   /**
-   * Handles the click event for the new task button and shows the add new task modal
+   * Handle recovery from backup
    */
-  const handleNewTaskClick = () => {
-    setShowAddNewTask(true);
+  const handleRecoveryClick = async () => {
+    if (backupInfo.length === 0) {
+      alert('No backup data available');
+      return;
+    }
+    
+    const latestBackup = backupInfo[0];
+    const confirmMessage = `Recover ${latestBackup.taskCount} tasks from backup created on ${new Date(latestBackup.timestamp).toLocaleString()}?\n\nThis will replace your current tasks.`;
+    
+    if (window.confirm(confirmMessage)) {
+      try {
+        const success = await onRecoverFromBackup();
+        if (success) {
+          alert('Tasks successfully recovered from backup!');
+        } else {
+          alert('Failed to recover from backup. Please try again.');
+        }
+      } catch (error) {
+        console.error('Recovery failed:', error);
+        alert('Error occurred during recovery. Please try again.');
+      }
+    }
   };
 
   /**
@@ -107,6 +130,13 @@ const Header = ({
 
   const syncDisplay = getSyncStatusDisplay();
 
+  /**
+   * Handles the click event for the new task button and shows the add new task modal
+   */
+  const handleNewTaskClick = () => {
+    setShowAddNewTask(true);
+  };
+
   return (
     <Container>
       <SearchBar
@@ -133,6 +163,21 @@ const Header = ({
             <NotificationBadge>{todayTasks.length}</NotificationBadge>
           )}
         </NotificationIcon>
+        
+        {/* Recovery Button - only show if backups exist */}
+        {backupInfo.length > 0 && (
+          <Button 
+            variant="outline-warning" 
+            size="sm" 
+            onClick={handleRecoveryClick}
+            className="me-2"
+            title={`Recover from backup (${backupInfo[0].taskCount} tasks available)`}
+          >
+            <FaHistory className="me-1" />
+            Recovery
+          </Button>
+        )}
+        
         <TaskBtn onClick={handleNewTaskClick} variant="primary">
           Add New Task
         </TaskBtn>{" "}

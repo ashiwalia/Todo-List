@@ -10,6 +10,7 @@ import {
   addDoc,
   onSnapshot 
 } from 'firebase/firestore';
+import { sanitizeTasks } from '../Utils/taskValidation';
 
 /**
  * Firebase Cloud Storage Service for persistent task storage
@@ -197,8 +198,11 @@ class FirebaseStorageService {
         });
       });
       
-      console.log('Fetched tasks from Firebase:', tasks.length);
-      return tasks;
+      // Sanitize tasks from Firebase
+      const cleanTasks = sanitizeTasks(tasks);
+      
+      console.log('Fetched tasks from Firebase:', tasks.length, 'sanitized to:', cleanTasks.length);
+      return cleanTasks;
     } catch (error) {
       console.error('Error fetching tasks from Firebase:', error);
       return [];
@@ -216,6 +220,9 @@ class FirebaseStorageService {
     }
 
     try {
+      // Sanitize tasks before saving
+      const cleanTasks = sanitizeTasks(tasks);
+      
       // Clear existing tasks and add new ones
       const tasksRef = collection(this.db, this.tasksCollection);
       const snapshot = await getDocs(tasksRef);
@@ -225,7 +232,7 @@ class FirebaseStorageService {
       await Promise.all(deletePromises);
       
       // Add new tasks
-      const addPromises = tasks.map(task => {
+      const addPromises = cleanTasks.map(task => {
         const taskData = { ...task };
         if (taskData.id) {
           // Use existing ID as document ID
@@ -239,7 +246,7 @@ class FirebaseStorageService {
       });
       
       await Promise.all(addPromises);
-      console.log('Tasks saved to Firebase successfully');
+      console.log('Tasks saved to Firebase successfully:', cleanTasks.length, 'tasks');
       return true;
     } catch (error) {
       console.error('Error saving tasks to Firebase:', error);
@@ -410,33 +417,116 @@ class FirebaseStorageService {
 
   /**
    * Sync local storage with Firebase
+   * Enhanced with intelligent merging and robust error handling
    * @param {Array} localTasks - Tasks from localStorage
    * @returns {Promise<Array>} Merged tasks
    */
   async syncTasks(localTasks = []) {
     if (!this.isEnabled()) {
+      console.log('Firebase not enabled, using local tasks');
       return localTasks;
     }
 
     try {
+      console.log('Starting Firebase sync...');
       const remoteTasks = await this.fetchTasks();
       
-      // Simple merge strategy: Firebase tasks take precedence if they exist
+      // Enhanced sync strategy with better conflict resolution
       if (remoteTasks.length > 0) {
-        console.log('Loaded tasks from Firebase:', remoteTasks.length);
-        return remoteTasks;
+        console.log('Firebase has tasks:', remoteTasks.length);
+        
+        // If local also has tasks, merge intelligently
+        if (localTasks.length > 0) {
+          const mergedTasks = this.mergeTasksIntelligently(localTasks, remoteTasks);
+          console.log('Merged local and remote tasks:', mergedTasks.length);
+          
+          // Save merged result back to Firebase
+          await this.saveTasks(mergedTasks);
+          return mergedTasks;
+        } else {
+          // Only remote has tasks
+          console.log('Using remote tasks only');
+          return remoteTasks;
+        }
       } else if (localTasks.length > 0) {
-        // If Firebase is empty but local has tasks, upload local tasks
-        console.log('Uploading local tasks to Firebase:', localTasks.length);
+        // Firebase is empty but local has tasks - upload them
+        console.log('Firebase empty, uploading local tasks:', localTasks.length);
         const success = await this.saveTasks(localTasks);
-        return success ? localTasks : [];
+        if (success) {
+          console.log('Successfully uploaded local tasks to Firebase');
+          return localTasks;
+        } else {
+          console.warn('Failed to upload local tasks, keeping local copy');
+          return localTasks;
+        }
+      } else {
+        // Both are empty - this is OK for new users
+        console.log('Both local and remote are empty - new user or fresh start');
+        return [];
+      }
+    } catch (error) {
+      console.error('Error syncing tasks with Firebase:', error);
+      console.log('Falling back to local tasks due to sync error');
+      
+      // Always preserve local tasks when Firebase fails
+      if (localTasks.length > 0) {
+        console.log('Preserving', localTasks.length, 'local tasks');
+        return localTasks;
       }
       
       return [];
-    } catch (error) {
-      console.error('Error syncing tasks with Firebase:', error);
-      return localTasks; // Fallback to local tasks
     }
+  }
+
+  /**
+   * Intelligently merge local and remote tasks
+   * Prioritizes newer tasks and handles conflicts
+   * @param {Array} localTasks - Local tasks
+   * @param {Array} remoteTasks - Remote tasks from Firebase
+   * @returns {Array} Merged tasks
+   */
+  mergeTasksIntelligently(localTasks, remoteTasks) {
+    const taskMap = new Map();
+    
+    // Add remote tasks first (older baseline)
+    remoteTasks.forEach(task => {
+      if (task.id) {
+        taskMap.set(task.id, { ...task, source: 'remote' });
+      }
+    });
+    
+    // Add/update with local tasks (newer changes)
+    localTasks.forEach(task => {
+      if (task.id) {
+        const existing = taskMap.get(task.id);
+        if (!existing) {
+          // New local task
+          taskMap.set(task.id, { ...task, source: 'local' });
+        } else {
+          // Conflict resolution: use the task with the latest update time
+          const localTime = new Date(task.updatedAt || task.createdAt || 0);
+          const remoteTime = new Date(existing.updatedAt || existing.createdAt || 0);
+          
+          if (localTime >= remoteTime) {
+            taskMap.set(task.id, { ...task, source: 'local' });
+          }
+          // If remote is newer, keep the existing remote task
+        }
+      }
+    });
+    
+    const mergedTasks = Array.from(taskMap.values()).map(task => {
+      const { source, ...cleanTask } = task;
+      return cleanTask;
+    });
+    
+    console.log('Task merge summary:', {
+      local: localTasks.length,
+      remote: remoteTasks.length,
+      merged: mergedTasks.length
+    });
+    
+    return mergedTasks;
   }
 }
 

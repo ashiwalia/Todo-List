@@ -36,7 +36,8 @@ const defaultTasks = [
     date: "2023-03-01",
     important: true,
     completed: "uncompleted",
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: "2",
@@ -45,7 +46,8 @@ const defaultTasks = [
     date: "2023-03-03",
     important: false,
     completed: "uncompleted",
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: "3",
@@ -54,7 +56,8 @@ const defaultTasks = [
     date: "2023-04-24",
     important: true,
     completed: "completed",
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
 ];
 
@@ -65,7 +68,6 @@ const defaultTasks = [
  * @returns {React.Page}
  */
 const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
-  // Enhanced task storage hook
   const {
     tasks,
     isLoading,
@@ -78,7 +80,10 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
     deleteTask,
     deleteAllTasks,
     syncWithCloud,
-    getCloudSetupInstructions
+    getCloudSetupInstructions,
+    recoverFromBackup,
+    getBackupInfo,
+    refresh: refreshTasks
   } = useTaskStorage('tasks', defaultTasks);
 
   // UI States
@@ -115,9 +120,18 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
     return await syncWithCloud();
   };
 
-  const handleConfigUpdate = () => {
-    // Refresh the tasks storage when Firebase config is updated
-    window.location.reload(); // Simple refresh to reinitialize Firebase
+  const handleConfigUpdate = async () => {
+    // Instead of a hard refresh, reinitialize tasks gracefully
+    try {
+      await refreshTasks();
+      console.log('Tasks refreshed after Firebase config update');
+    } catch (error) {
+      console.error('Failed to refresh tasks after config update:', error);
+      // Only as a last resort, offer to reload
+      if (window.confirm('Firebase configuration updated but failed to refresh tasks. Reload the page?')) {
+        window.location.reload();
+      }
+    }
   };
 
   // Sorting function
@@ -233,6 +247,8 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
             cloudEnabled={cloudEnabled}
             isSyncing={isSyncing}
             onCloudSetup={handleFirebaseConfig}
+            onRecoverFromBackup={recoverFromBackup}
+            backupInfo={getBackupInfo()}
           />
           <CurrentItem>
             {checkUrl(navStateTasks)} (
