@@ -53,6 +53,7 @@ const LeftSideBar = ({ setTasks, tasks, addTask }) => {
               allTasks === "important-tasks" ||
               allTasks === "completed-tasks" ||
               allTasks === "uncompleted-tasks" ||
+              allTasks === "working-tasks" ||
               allTasks === "today-tasks"
                 ? ""
                 : "active"
@@ -62,6 +63,7 @@ const LeftSideBar = ({ setTasks, tasks, addTask }) => {
           </NavBtn>
           <NavBtn to="important-tasks">Important Tasks</NavBtn>
           <NavBtn to="completed-tasks">Completed Tasks</NavBtn>
+          <NavBtn to="working-tasks">Working Tasks</NavBtn>
           <NavBtn to="uncompleted-tasks">Unompleted Tasks</NavBtn>
         </Offcanvas.Body>
       </OffcanvasContainer>

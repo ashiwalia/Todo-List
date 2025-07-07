@@ -42,9 +42,10 @@ A to do List application that allows users to create and manage their tasks. It 
    - Today's Tasks
    - All Tasks
    - Important Tasks
-   -  Completed Tasks
-   -  Uncompleted Tasks
-3. Ability to mark tasks as **completed** or **uncompleted**.
+   - Completed Tasks
+   - Working Tasks
+   - Uncompleted Tasks
+3. Ability to mark tasks as **completed**, **working**, or **uncompleted**.
 4. Ability to edit and delete tasks.
 5. Ability to search for tasks using a search bar.
 6. Responsive design that works well on desktop and mobile devices.

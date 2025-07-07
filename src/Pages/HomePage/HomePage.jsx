@@ -155,6 +155,11 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
           (task) => task.completed === "uncompleted"
         );
         break;
+      case "working-tasks":
+        filteredTasks = tasks.filter(
+          (task) => task.completed === "working"
+        );
+        break;
       default:
         break;
     }
@@ -170,6 +175,7 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
         url === "important-tasks" ||
         url === "today-tasks" ||
         url === "uncompleted-tasks" ||
+        url === "working-tasks" ||
         url === "all-tasks"
       )
     ) {
@@ -298,6 +304,18 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
             />
             <Route
               path="uncompleted-tasks"
+              element={
+                <ShowTasks
+                  filteredTasks={filteredTasks}
+                  viewTask={viewTask}
+                  setTasks={saveTasks}
+                  updateTask={updateTask}
+                  deleteTask={deleteTask}
+                />
+              }
+            />
+            <Route
+              path="working-tasks"
               element={
                 <ShowTasks
                   filteredTasks={filteredTasks}

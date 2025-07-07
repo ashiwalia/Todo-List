@@ -26,14 +26,14 @@ const newTask = [
   },
   {
     title: "Task 2",
-    description: "This is a new task",
+    description: "This is a working task",
     date: "2023-03-03",
     important: false,
-    completed: "uncompleted",
+    completed: "working",
   },
   {
     title: "Task 3",
-    description: "This is a new task",
+    description: "This is a completed task",
     date: "2023-04-24",
     important: true,
     completed: "completed",
@@ -136,8 +136,8 @@ const TaskModal = ({
   const [important, setImportant] = useState(
     taskMode === "Edit" ? getTaskInfo(titleTask)?.important : false
   );
-  const [completed, setCompleted] = useState(
-    taskMode === "Edit" ? getTaskInfo(titleTask)?.completed === "completed" : false
+  const [status, setStatus] = useState(
+    taskMode === "Edit" ? getTaskInfo(titleTask)?.completed || "uncompleted" : "uncompleted"
   );
   const [titleIsUsed, setTitleIsUsed] = useState(false);
   // const [directory, setDirectory] = useState("Main");
@@ -172,7 +172,7 @@ const TaskModal = ({
           description: description,
           date: date,
           important: important,
-          completed: completed ? "completed" : "uncompleted",
+          completed: status,
           createdAt: new Date().toISOString()
         };
         
@@ -215,7 +215,7 @@ const TaskModal = ({
         description: description,
         date: date,
         important: important,
-        completed: completed ? "completed" : "uncompleted",
+        completed: status,
       };
       
       // Use enhanced storage if available, otherwise fallback to localStorage
@@ -250,7 +250,7 @@ const TaskModal = ({
     setTitle("");
     setDescription("");
     setImportant(false);
-    setCompleted(false);
+    setStatus("uncompleted");
     setTitleIsUsed(false);
   };
 
@@ -332,16 +332,38 @@ const TaskModal = ({
             />
             <TaskStatus>Mark as important</TaskStatus>
           </ProgressCheck>
-          <ProgressCheck>
-            <input
-              className="form-check-input w-5vm"
-              type="checkbox"
-              id="state-two"
-              onChange={(e) => setCompleted(e.target.checked)}
-              checked={completed}
-            />
-            <TaskStatus>Mark as completed</TaskStatus>
-          </ProgressCheck>
+          <div>
+            <Form.Label>Task Status</Form.Label>
+            <div>
+              <Form.Check
+                type="radio"
+                id="status-uncompleted"
+                name="taskStatus"
+                label="Uncompleted"
+                value="uncompleted"
+                checked={status === "uncompleted"}
+                onChange={(e) => setStatus(e.target.value)}
+              />
+              <Form.Check
+                type="radio"
+                id="status-working"
+                name="taskStatus"
+                label="Working"
+                value="working"
+                checked={status === "working"}
+                onChange={(e) => setStatus(e.target.value)}
+              />
+              <Form.Check
+                type="radio"
+                id="status-completed"
+                name="taskStatus"
+                label="Completed"
+                value="completed"
+                checked={status === "completed"}
+                onChange={(e) => setStatus(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
       </Modal.Body>
       <Footer>

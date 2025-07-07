@@ -40,8 +40,11 @@ export const StatusBtn = styled.button`
   font-size: 14px;
   font-weight: 700;
   border: none;
-  background-color: ${({ colorState }) =>
-    colorState === "uncompleted" ? "#fde68a" : "#a7f3d0"};
+  background-color: ${({ colorState }) => {
+    if (colorState === "uncompleted") return "#fde68a";
+    if (colorState === "working") return "#93c5fd"; 
+    return "#a7f3d0";
+  }};
   letter-spacing: unset;
   line-height: 15px;
   min-height: 30px;

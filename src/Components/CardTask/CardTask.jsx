@@ -41,7 +41,14 @@ const CardTask = ({ taskData, setTasks, tasks, viewTask, updateTask, deleteTask 
 
   // handle state change of task progress
   const handleToggleState = async () => {
-    const newState = state === "completed" ? "uncompleted" : "completed";
+    let newState;
+    if (state === "uncompleted") {
+      newState = "working";
+    } else if (state === "working") {
+      newState = "completed";
+    } else {
+      newState = "uncompleted";
+    }
     
     // Use enhanced storage if available, otherwise fallback to localStorage
     if (typeof updateTask === 'function') {
