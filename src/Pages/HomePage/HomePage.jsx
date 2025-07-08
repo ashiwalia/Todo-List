@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { FiList } from "react-icons/fi";
+import { FiList, FiX, FiMenu } from "react-icons/fi";
 import { CiGrid41 } from "react-icons/ci";
 import { Form } from 'react-bootstrap';
 
@@ -14,6 +14,12 @@ import {
   ShapeView,
   ChildView,
   HomeContainer,
+  MobileNavToggle,
+  MobileNavOverlay,
+  MobileNavContainer,
+  MobileNavItem,
+  MobileNavHeader,
+  SortContainer,
 } from "./HomePage.styled";
 
 // Import Components
@@ -91,6 +97,7 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortCriteria, setSortCriteria] = useState("dueDate");
   const [showFirebaseConfig, setShowFirebaseConfig] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
   
   const location = useLocation();
   const url = location.pathname;
@@ -114,6 +121,10 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
 
   const handleFirebaseConfig = () => {
     setShowFirebaseConfig(true);
+  };
+
+  const toggleMobileNav = () => {
+    setShowMobileNav(!showMobileNav);
   };
 
   const handleFirebaseSync = async () => {
@@ -254,13 +265,13 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
             {checkUrl(navStateTasks)} (
             {tasks && currentTasksInPageView.length} tasks)
           </CurrentItem>
-          <div>
+          <SortContainer>
             <Form.Label htmlFor="sort">Sort by:</Form.Label>
             <Form.Select id="sort" value={sortCriteria} onChange={handleSortChange}>
               <option value="dueDate">Due Date</option>
               <option value="priority">Priority</option>
             </Form.Select>
-          </div>
+          </SortContainer>
           <ShapeView>
             <ChildView onClick={handleViewList}>
               <FiList size={25} />
@@ -269,6 +280,41 @@ const HomePage = ({ handleToggleTheme, checkedSwitch }) => {
               <CiGrid41 size={25} />
             </ChildView>
           </ShapeView>
+          <MobileNavToggle onClick={toggleMobileNav}>
+            {showMobileNav ? <FiX size={25} /> : <FiMenu size={25} />}
+          </MobileNavToggle>
+          {showMobileNav && (
+            <MobileNavOverlay>
+              <MobileNavContainer>
+                <MobileNavHeader>
+                  <h2>Navigation</h2>
+                  <button onClick={toggleMobileNav}>
+                    <FiX />
+                  </button>
+                </MobileNavHeader>
+                <div>
+                  <MobileNavItem to="/all-tasks" onClick={toggleMobileNav}>
+                    All Tasks
+                  </MobileNavItem>
+                  <MobileNavItem to="/today-tasks" onClick={toggleMobileNav}>
+                    Today&apos;s Tasks
+                  </MobileNavItem>
+                  <MobileNavItem to="/important-tasks" onClick={toggleMobileNav}>
+                    Important Tasks
+                  </MobileNavItem>
+                  <MobileNavItem to="/completed-tasks" onClick={toggleMobileNav}>
+                    Completed Tasks
+                  </MobileNavItem>
+                  <MobileNavItem to="/uncompleted-tasks" onClick={toggleMobileNav}>
+                    Uncompleted Tasks
+                  </MobileNavItem>
+                  <MobileNavItem to="/working-tasks" onClick={toggleMobileNav}>
+                    Working Tasks
+                  </MobileNavItem>
+                </div>
+              </MobileNavContainer>
+            </MobileNavOverlay>
+          )}
           <Routes>
             <Route
               path="all-tasks"

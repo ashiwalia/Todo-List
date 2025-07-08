@@ -8,14 +8,16 @@ import ProgressBar from "react-bootstrap/ProgressBar";
 // styles of offcanvas container
 export const OffcanvasContainer = styled(Offcanvas)`
   position: fixed;
-  width: 250px !important;
+  width: 280px !important;
   flex-direction: column !important;
   z-index: 100;
-
   background-color: ${({ theme }) => theme.background.primary} !important;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
 
   // styles of offcanvas body
   .offcanvas-body {
+    padding: 1rem;
+    
     //  styles of items inside offcanvas body
     .dropdown-item {
       color: ${({ theme }) => theme.color.primary} !important;
@@ -25,12 +27,15 @@ export const OffcanvasContainer = styled(Offcanvas)`
       }
     }
   }
+  
   hr {
     opacity: 0.1;
   }
 
   // media query for smaller screens
-  @media only screen and (max-width: 767px) {
+  @media only screen and (max-width: 768px) {
+    width: 100% !important;
+    max-width: 320px !important;
     display: none;
   }
 `;
